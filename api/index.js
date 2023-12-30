@@ -6,8 +6,12 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
+const ws = require('ws')
+
 // for accessing dotenv file
 dotenv.config();
+
+
 // connecting mongoose
 mongoose.connect(process.env.MONGO_URL);
 
@@ -27,6 +31,8 @@ app.get("/", (req, res) => {
   res.json("test ok");
 });
 
+
+// getting profile
 app.get('/profile', (req, res) => {
   // extracting token from cookie
   const { token } = req.cookies || {};
@@ -48,6 +54,7 @@ app.get('/profile', (req, res) => {
   }
 });
 
+// login
 app.post('/login', async(req, res) => {
   const {username, password} = req.body;
  const foundUser = await User.findOne({username})
@@ -75,8 +82,14 @@ app.post("/register", async (req, res) => {
     if (err) throw err;
     // setting cookie with name token and storing token in it
     res.cookie("token", token,{sameSite:"none", secure: true}).status(201).json({
-      userId: createdUser._id
+      userId: createdUser._id,
     });
   });
 });
-app.listen(8080);
+
+const server = app.listen(8080);
+
+const wss = new ws.WebSocketServer({server})
+wss.on('connection', (connection)=>{
+  console.log('connected')
+})
